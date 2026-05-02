@@ -607,9 +607,13 @@ function ResultsScreen({ result, onReset, onTestDecode }: { result: ApiResult; o
 
           {/* Final Value */}
           <div className="p-6 bg-white border-t border-[#EAEAEA] mt-auto">
-            <span className="font-mono text-[10px] tracking-[0.12em] text-[#888] block mb-2">FINAL ENCODED VALUE</span>
+            <span className="font-mono text-[10px] tracking-[0.12em] text-[#888] block mb-2">
+              {isDecodeMode ? 'DECODED MESSAGE' : 'FINAL ENCODED VALUE'}
+            </span>
             <div className="p-4 bg-[#FAFAFA] border border-[#EAEAEA] font-mono text-[14px] text-[#1A1A1A] break-all leading-relaxed">
-              {result.details?.encoded_value}
+              {isDecodeMode
+                ? String(result.details?.decoded_message ?? '')
+                : String(result.details?.encoded_value ?? '')}
             </div>
           </div>
         </div>
