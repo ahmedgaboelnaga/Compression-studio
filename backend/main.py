@@ -19,6 +19,7 @@ class AlgorithmName(str, Enum):
     shannon_fano = "shannon-fano"
     huffman = "huffman"
     arithmetic = "arithmetic"
+    arithmetic_decode = "arithmetic-decode"
     lzw = "lzw"
 
 class CompressRequest(BaseModel):
@@ -42,6 +43,8 @@ def compress_data(request: CompressRequest):
             result = algorithms.compress_huffman(text)
         elif algo == AlgorithmName.arithmetic:
             result = algorithms.compress_arithmetic(text)
+        elif algo == AlgorithmName.arithmetic_decode:
+            result = algorithms.compress_arithmetic_decode(text)
         elif algo == AlgorithmName.lzw:
             result = algorithms.compress_lzw(text)
         else:
@@ -63,4 +66,6 @@ def compress_data(request: CompressRequest):
         },
         "codes": result.get("codes"),
         "details": result.get("details"),
+        "translation_preview": result.get("translation_preview"),
+        "metadata": result.get("metadata"),
     }

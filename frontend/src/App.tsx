@@ -1,6 +1,8 @@
 import { useState, useRef, useCallback } from 'react'
 
-const API_URL = 'http://127.0.0.1:8001'
+const API_URL =
+  import.meta.env.VITE_API_URL ??
+  (import.meta.env.DEV ? 'http://127.0.0.1:8001' : '/api')
 
 type Algorithm = 'huffman' | 'rle' | 'lzw' | 'shannon-fano' | 'arithmetic' | 'arithmetic-decode'
 type InputTab  = 'text' | 'file'

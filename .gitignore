@@ -13,3 +13,10 @@ wheels/
 .agents/
 .goose/
 skills-lock.json
+
+.vercel
+
+# Environment files
+.env
+.env.*
+!.env.example

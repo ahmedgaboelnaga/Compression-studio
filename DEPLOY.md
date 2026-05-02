@@ -1,53 +1,60 @@
 # Deployment
 
-This project is a single monorepo with separate deploy targets:
+This repository can be deployed to one Vercel project using **Vercel Services**:
 
-- `frontend/` deploys to Vercel.
-- `backend/` deploys to the Azure VM through Docker Compose.
+- Frontend (`frontend/`) at `/`
+- FastAPI backend (`backend/main.py`) at `/api`
 
-## Frontend on Vercel
+The root [`vercel.json`](./vercel.json) defines both services.
 
-Create a Vercel project from this repository and set:
+## One-time Vercel setup
 
-- Root Directory: `frontend`
-- Build Command: `npm run build`
-- Output Directory: `dist`
-
-Set this Vercel environment variable:
-
-```env
-VITE_API_URL=https://api.your-domain.com
-```
-
-Use the public HTTPS URL for the FastAPI backend on the Azure VM.
-
-## Backend on Azure VM
-
-The GitHub workflow builds and pushes only the backend Docker image to GHCR, then runs:
+1. Login:
 
 ```bash
-docker compose -f docker-compose.prod.yml pull
-docker compose -f docker-compose.prod.yml up -d --remove-orphans
+vercel login
 ```
 
-The production compose file exposes FastAPI on port `8000`. Put Nginx, Caddy, or Azure networking in front of it for HTTPS, then point `VITE_API_URL` at that HTTPS backend URL.
-
-Required GitHub secrets:
-
-```text
-VM_HOST
-VM_SSH_KEY
-```
-
-## Local Development
-
-Run both services locally:
+2. Link this repo from the root directory:
 
 ```bash
-docker compose up --build
+vercel link
 ```
 
-Or run them separately:
+3. In Vercel Dashboard, set **Framework Preset** to **Services**.
+
+## Deploy
+
+Preview deployment:
+
+```bash
+vercel
+```
+
+Production deployment:
+
+```bash
+vercel --prod
+```
+
+## Environment variables
+
+- `VITE_API_URL` is optional.
+- If not set, frontend uses:
+  - `http://localhost:8000` in development
+  - `/api` in production
+
+Only set `VITE_API_URL` if you want the frontend to call a different API origin.
+
+## Local development
+
+Run both services with Vercel routing:
+
+```bash
+vercel dev -L
+```
+
+Or run separately:
 
 ```bash
 cd backend
