@@ -1,8 +1,13 @@
 import { useState, useRef, useCallback } from 'react'
 
+const configuredApiUrl = (import.meta.env.VITE_API_URL ?? '').trim().replace(/\/$/, '')
+const pointsToLocalApi = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configuredApiUrl)
 const API_URL =
-  import.meta.env.VITE_API_URL ??
-  (import.meta.env.DEV ? 'http://127.0.0.1:8001' : '/api')
+  configuredApiUrl && !(import.meta.env.PROD && pointsToLocalApi)
+    ? configuredApiUrl
+    : import.meta.env.DEV
+      ? 'http://127.0.0.1:8001'
+      : '/api'
 
 type Algorithm = 'huffman' | 'rle' | 'lzw' | 'shannon-fano' | 'arithmetic' | 'arithmetic-decode'
 type InputTab  = 'text' | 'file'
@@ -112,6 +117,8 @@ function InputScreen({ onCompress, value, onChange, algo, onAlgoChange }: {
   const meta = ALGORITHMS[algo]
   const isDecodeMode = algo === 'arithmetic-decode'
   const uniqueChars = new Set(value).size
+  const decodePayloadStatus = isDecodeMode ? getArithmeticPayloadStatus(value) : null
+  const canSubmit = value.trim().length > 0 && (!isDecodeMode || Boolean(decodePayloadStatus?.ok))
   const entropy = value.length > 0 && !isDecodeMode
     ? (-[...new Set(value)].reduce((s, c) => {
         const p = [...value].filter(x => x === c).length / value.length
@@ -124,9 +131,14 @@ function InputScreen({ onCompress, value, onChange, algo, onAlgoChange }: {
     const isTxt = file.name.endsWith('.txt')
     if (!isTxt && !isJson) return
     const reader = new FileReader()
-    reader.onload = e => { onChange(e.target?.result as string ?? ''); setTab('text') }
+    reader.onload = e => {
+      const contents = e.target?.result as string ?? ''
+      if (isJson && isArithmeticDecodePayload(contents)) onAlgoChange('arithmetic-decode')
+      onChange(contents)
+      setTab('text')
+    }
     reader.readAsText(file)
-  }, [onChange])
+  }, [onAlgoChange, onChange])
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault(); setDragging(false)
@@ -158,11 +170,16 @@ function InputScreen({ onCompress, value, onChange, algo, onAlgoChange }: {
             <div className="flex justify-between items-center px-6 py-3 border-t border-[#EAEAEA]">
               <div className="flex gap-4 items-center">
                 <span className="font-mono text-[10px] text-[#999]">{value.length} characters</span>
+                {decodePayloadStatus && (
+                  <span className={`font-mono text-[10px] ${decodePayloadStatus.ok ? 'text-[#2F8F55]' : 'text-[#B45309]'}`}>
+                    {decodePayloadStatus.detail}
+                  </span>
+                )}
                 {isDecodeMode && (
                   <button 
                     onClick={() => onChange(JSON.stringify({
-                      value: "0.556640625",
-                      ranges: { "H": ["0.0", "0.2"], "E": ["0.2", "0.4"], "L": ["0.4", "0.8"], "O": ["0.8", "1.0"] },
+                      value: "0.22816",
+                      ranges: { "E": ["0", "0.2"], "H": ["0.2", "0.4"], "L": ["0.4", "0.8"], "O": ["0.8", "1.0"] },
                       length: 5
                     }, null, 2))}
                     className="font-mono text-[9px] text-[#1A1A1A] hover:underline cursor-pointer"
@@ -225,7 +242,7 @@ function InputScreen({ onCompress, value, onChange, algo, onAlgoChange }: {
           ))}
         </div>
 
-        <button onClick={() => value.trim() && onCompress(value, algo)} disabled={!value.trim()}
+        <button onClick={() => canSubmit && onCompress(value, algo)} disabled={!canSubmit}
           className="flex items-center justify-center gap-3 bg-[#1A1A1A] text-white font-mono text-[11px] tracking-[0.15em] font-semibold hover:bg-[#2A2A2A] disabled:bg-[#CCC] disabled:cursor-not-allowed transition-all cursor-pointer shrink-0 py-4">
           {isDecodeMode ? 'DECOMPRESS DATA' : 'COMPRESS DATA'} <span className="text-base">&#8594;</span>
         </button>
@@ -361,6 +378,46 @@ function parseLzwPayload(payload: string) {
     .split(/\s+/)
     .map(code => Number(code))
     .filter(code => Number.isFinite(code))
+}
+
+function readArithmeticPayloadFields(input: string) {
+  try {
+    const payload = JSON.parse(input)
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null
+    const details = payload.details && typeof payload.details === 'object' ? payload.details : {}
+    const value = payload.value ?? payload.encoded_value ?? payload.payload ?? details.value ?? details.encoded_value
+    const ranges = payload.ranges ?? details.ranges
+    const length = payload.length ?? payload.original_length ?? details.length ?? details.original_length
+    return { value, ranges, length }
+  } catch {
+    return null
+  }
+}
+
+function isArithmeticDecodePayload(input: string) {
+  const fields = readArithmeticPayloadFields(input)
+  return Boolean(fields?.value != null && fields?.ranges && fields?.length != null)
+}
+
+function getArithmeticPayloadStatus(input: string) {
+  if (!input.trim()) return { label: 'WAITING', detail: 'No payload loaded', ok: false }
+  const fields = readArithmeticPayloadFields(input)
+  if (!fields) return { label: 'NOT JSON', detail: 'Use arithmetic .cmp.json', ok: false }
+  const missing = [
+    fields.value == null ? 'value' : '',
+    !fields.ranges ? 'ranges' : '',
+    fields.length == null ? 'length' : '',
+  ].filter(Boolean)
+  if (missing.length) return { label: 'INCOMPLETE', detail: `Missing ${missing.join(', ')}`, ok: false }
+  return { label: 'READY', detail: 'Arithmetic payload detected', ok: true }
+}
+
+function formatRangeProbability(range: [string, string], probability: unknown) {
+  if (typeof probability === 'number' && Number.isFinite(probability)) return probability.toFixed(4)
+  const low = Number(range[0])
+  const high = Number(range[1])
+  const derived = high - low
+  return Number.isFinite(derived) ? derived.toFixed(4) : 'Derived'
 }
 
 
@@ -555,7 +612,7 @@ function ResultsScreen({ result, onReset, onTestDecode }: { result: ApiResult; o
               {Object.entries(ranges).map(([symbol, range], i) => (
                 <tr key={symbol} className={`border-b border-[#F4F4F4] ${i % 2 === 1 ? 'bg-[#FAFAFA]' : 'bg-white'}`}>
                   <td className="font-mono text-[12px] text-[#1A1A1A] px-6 py-3">{formatSymbol(symbol)}</td>
-                  <td className="font-mono text-[12px] text-[#666] px-6 py-3">{(probabilities[symbol] as number).toFixed(4)}</td>
+                  <td className="font-mono text-[12px] text-[#666] px-6 py-3">{formatRangeProbability(range, probabilities[symbol])}</td>
                   <td className="font-mono text-[11px] text-[#888] px-6 py-3 truncate max-w-[120px]">{range[0]}</td>
                   <td className="font-mono text-[11px] text-[#888] px-6 py-3 truncate max-w-[120px]">{range[1]}</td>
                 </tr>
