@@ -898,13 +898,17 @@ export default function App() {
   const [appError, setAppError] = useState<AppError | null>(null)
 
   const handleCompress = async (text: string, algorithm: Algorithm) => {
-    console.log(`[STUDIO] Connecting to ${API_URL}/compress with ${algorithm}`)
+    const isDecode = algorithm === 'arithmetic-decode'
+    const endpoint = isDecode
+      ? `${API_URL}/decompress/${algorithm}`
+      : `${API_URL}/compress/${algorithm}`
+    console.log(`[STUDIO] Connecting to ${endpoint}`)
     setAppError(null); setAlgo(algorithm); setScreen('compressing')
     try {
-      const res = await fetch(`${API_URL}/compress`, {
+      const res = await fetch(endpoint, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ text, algorithm }),
+        body:    JSON.stringify({ text }),
       })
       if (!res.ok) {
         let detail: string | undefined

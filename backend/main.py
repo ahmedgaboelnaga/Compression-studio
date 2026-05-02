@@ -26,14 +26,14 @@ class CompressRequest(BaseModel):
     text: str
     algorithm: AlgorithmName
 
-@app.post("/compress")
-def compress_data(request: CompressRequest):
-    algo = request.algorithm
-    text = request.text
-    
+class TextRequest(BaseModel):
+    text: str
+
+
+def _run_algorithm(algo: AlgorithmName, text: str) -> dict:
     if not text:
         raise HTTPException(status_code=400, detail="Text is required")
-        
+
     try:
         if algo == AlgorithmName.rle:
             result = algorithms.compress_rle(text)
@@ -69,3 +69,32 @@ def compress_data(request: CompressRequest):
         "translation_preview": result.get("translation_preview"),
         "metadata": result.get("metadata"),
     }
+
+
+@app.post("/compress/{algorithm}")
+def compress_by_algorithm(algorithm: AlgorithmName, request: TextRequest):
+    if algorithm == AlgorithmName.arithmetic_decode:
+        raise HTTPException(
+            status_code=400,
+            detail="Use /decompress/arithmetic-decode for arithmetic decode payloads.",
+        )
+    return _run_algorithm(algorithm, request.text)
+
+
+@app.post("/decompress/{algorithm}")
+def decompress_by_algorithm(algorithm: AlgorithmName, request: TextRequest):
+    if algorithm != AlgorithmName.arithmetic_decode:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Decompress endpoint is currently supported only for '{AlgorithmName.arithmetic_decode.value}'.",
+        )
+    return _run_algorithm(algorithm, request.text)
+
+
+@app.post("/compress")
+def compress_data(request: CompressRequest):
+    """
+    Backward-compatible route for existing clients.
+    Prefer /compress/{algorithm} and /decompress/{algorithm} for new integrations.
+    """
+    return _run_algorithm(request.algorithm, request.text)
