@@ -1,3 +1,4 @@
+from enum import Enum
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -13,28 +14,35 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class AlgorithmName(str, Enum):
+    rle = "rle"
+    shannon_fano = "shannon-fano"
+    huffman = "huffman"
+    arithmetic = "arithmetic"
+    lzw = "lzw"
+
 class CompressRequest(BaseModel):
     text: str
-    algorithm: str
+    algorithm: AlgorithmName
 
 @app.post("/compress")
 def compress_data(request: CompressRequest):
-    algo = request.algorithm.lower()
+    algo = request.algorithm
     text = request.text
     
     if not text:
         raise HTTPException(status_code=400, detail="Text is required")
         
     try:
-        if algo == "rle":
+        if algo == AlgorithmName.rle:
             result = algorithms.compress_rle(text)
-        elif algo == "shannon-fano":
+        elif algo == AlgorithmName.shannon_fano:
             result = algorithms.compress_shannon_fano(text)
-        elif algo == "huffman":
+        elif algo == AlgorithmName.huffman:
             result = algorithms.compress_huffman(text)
-        elif algo == "arithmetic":
+        elif algo == AlgorithmName.arithmetic:
             result = algorithms.compress_arithmetic(text)
-        elif algo == "lzw":
+        elif algo == AlgorithmName.lzw:
             result = algorithms.compress_lzw(text)
         else:
             raise HTTPException(status_code=400, detail="Unknown algorithm")
