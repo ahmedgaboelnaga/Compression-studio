@@ -2,9 +2,9 @@
 
 export function AlgorithmExplanationsScreen() {
   return (
-    <div className="flex-1 flex overflow-hidden bg-white">
+    <div className="explanations-screen flex-1 flex overflow-hidden bg-white">
       {/* Left Sidebar */}
-      <div className="w-[320px] flex flex-col px-12 py-12 gap-8 bg-[#FAFAFA] border-r border-[#EAEAEA] shrink-0 overflow-y-auto">
+      <div className="explanations-sidebar w-[320px] flex flex-col px-12 py-12 gap-8 bg-[#FAFAFA] border-r border-[#EAEAEA] shrink-0 overflow-y-auto">
         <span className="font-mono text-[14px] font-bold tracking-[0.2em] text-[#1A1A1A]">COMPRESSION</span>
         <div className="flex flex-col gap-4 mt-4">
           <a href="#intro" className="text-[13px] font-medium text-[#1A1A1A] hover:text-black">Introduction</a>
@@ -17,8 +17,8 @@ export function AlgorithmExplanationsScreen() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center px-16 py-20 overflow-y-auto" style={{ scrollBehavior: 'smooth' }}>
-        <div className="flex flex-col gap-24 w-full" style={{ maxWidth: 680 }}>
+      <div className="explanations-content flex-1 flex flex-col items-center px-16 py-20 overflow-y-auto" style={{ scrollBehavior: 'smooth' }}>
+        <div className="explanations-inner flex flex-col gap-24 w-full" style={{ maxWidth: 680 }}>
           
           {/* Intro */}
           <section id="intro" className="flex flex-col gap-6">

@@ -63,13 +63,13 @@ const ALGO_KEYS = Object.keys(ALGORITHMS) as Algorithm[]
 
 function Nav({ onNavigate }: { onNavigate?: (s: Screen) => void }) {
   return (
-    <nav className="relative z-50 flex items-center justify-between px-12 h-16 bg-white border-b border-[#EAEAEA] shrink-0">
-      <div className="flex items-center gap-8 cursor-pointer" onClick={() => onNavigate?.('input')}>
+    <nav className="app-nav relative z-50 flex items-center justify-between px-12 h-16 bg-white border-b border-[#EAEAEA] shrink-0">
+      <div className="nav-brand flex items-center gap-8 cursor-pointer" onClick={() => onNavigate?.('input')}>
         <span className="font-mono text-[11px] tracking-[0.2em] font-semibold text-[#1A1A1A]">MULTIMEDIA</span>
         <div className="w-px h-5 bg-[#E0E0E0]" />
         <span className="font-mono text-[11px] tracking-[0.15em] text-[#666]">COMPRESSION STUDIO</span>
       </div>
-      <div className="flex items-center gap-6">
+      <div className="nav-links flex items-center gap-6">
         <span className="font-mono text-[10px] tracking-[0.15em] text-[#999] hover:text-[#1A1A1A] cursor-pointer transition-colors" onClick={() => window.open('https://github.com', '_blank')}>DOCS</span>
         <span className="font-mono text-[10px] tracking-[0.15em] text-[#999] hover:text-[#1A1A1A] cursor-pointer transition-colors" onClick={() => onNavigate?.('explanations')}>ALGORITHMS</span>
         <span className="font-mono text-[10px] tracking-[0.15em] text-[#999] hover:text-[#1A1A1A] cursor-pointer transition-colors">ABOUT</span>
@@ -80,16 +80,16 @@ function Nav({ onNavigate }: { onNavigate?: (s: Screen) => void }) {
 
 function Hero({ selected, onSelect }: { selected: Algorithm; onSelect: (a: Algorithm) => void }) {
   return (
-    <div className="relative overflow-hidden bg-[#FAFAFA] shrink-0" style={{ height: 220 }}>
-      <span className="font-playfair font-bold absolute select-none pointer-events-none"
+    <div className="hero-panel relative overflow-hidden bg-[#FAFAFA] shrink-0" style={{ height: 220 }}>
+      <span className="hero-watermark font-playfair font-bold absolute select-none pointer-events-none"
         style={{ fontSize: 240, lineHeight: 1, color: '#F0F0F0', top: -30, left: -40, letterSpacing: -8, whiteSpace: 'nowrap' }}>
         COMPRESS
       </span>
-      <div className="relative z-10 px-12 pt-10 flex flex-col gap-3">
+      <div className="hero-content relative z-10 px-12 pt-10 flex flex-col gap-3">
         <h1 className="font-playfair font-bold text-[42px] leading-tight text-[#1A1A1A]">Lossless Data Compression</h1>
         <p className="text-[16px] text-[#666]">Analyze and compare compression algorithms in real time.</p>
       </div>
-      <div className="absolute bottom-4 left-12 z-10 flex gap-2 flex-wrap">
+      <div className="algorithm-strip absolute bottom-4 left-12 z-10 flex gap-2 flex-wrap">
         {ALGO_KEYS.map(k => (
           <button key={k} onClick={() => onSelect(k)}
             className={`font-mono text-[10px] tracking-[0.1em] px-3 h-7 transition-all duration-200 cursor-pointer ${selected === k
@@ -146,9 +146,9 @@ function InputScreen({ onCompress, value, onChange, algo, onAlgoChange }: {
   }
 
   return (
-    <div className="flex-1 flex overflow-hidden">
+    <div className="input-layout flex-1 flex overflow-hidden">
       {/* Left panel */}
-      <div className="flex-1 flex flex-col px-12 py-8 gap-6 overflow-hidden">
+      <div className="input-primary flex-1 flex flex-col px-12 py-8 gap-6 overflow-hidden">
         <span className="font-mono text-[11px] tracking-[0.2em] text-[#666]">DATA INPUT</span>
         {/* Tabs */}
         <div className="flex">
@@ -167,7 +167,7 @@ function InputScreen({ onCompress, value, onChange, algo, onAlgoChange }: {
             <textarea value={value} onChange={e => onChange(e.target.value)}
               className="flex-1 resize-none bg-transparent p-6 text-[15px] leading-[1.7] text-[#1A1A1A] outline-none placeholder-[#CCC] font-mono"
               placeholder={isDecodeMode ? "Paste compressed JSON payload here..." : "Type or paste your data here..."} />
-            <div className="flex justify-between items-center px-6 py-3 border-t border-[#EAEAEA]">
+            <div className="input-footer flex justify-between items-center px-6 py-3 border-t border-[#EAEAEA]">
               <div className="flex gap-4 items-center">
                 <span className="font-mono text-[10px] text-[#999]">{value.length} characters</span>
                 {decodePayloadStatus && (
@@ -195,7 +195,7 @@ function InputScreen({ onCompress, value, onChange, algo, onAlgoChange }: {
           </div>
         ) : (
           <div onDragOver={e => { e.preventDefault(); setDragging(true) }} onDragLeave={() => setDragging(false)} onDrop={onDrop}
-            className={`flex-1 flex flex-col items-center justify-center gap-5 border-2 transition-colors ${dragging ? 'border-[#1A1A1A] bg-[#F5F5F5]' : 'border-[#E0E0E0] bg-[#FAFAFA]'}`}>
+            className={`drop-zone flex-1 flex flex-col items-center justify-center gap-5 border-2 transition-colors ${dragging ? 'border-[#1A1A1A] bg-[#F5F5F5]' : 'border-[#E0E0E0] bg-[#FAFAFA]'}`}>
             <span className="text-5xl text-[#CCC]">↑</span>
             <p className="font-playfair text-[22px] text-[#1A1A1A]">Drag & drop your .txt or .cmp.json file here</p>
             <p className="text-[13px] text-[#999]">or</p>
@@ -210,10 +210,10 @@ function InputScreen({ onCompress, value, onChange, algo, onAlgoChange }: {
         )}
       </div>
 
-      <div className="w-px bg-[#EAEAEA] shrink-0" />
+      <div className="layout-divider w-px bg-[#EAEAEA] shrink-0" />
 
       {/* Right panel */}
-      <div className="w-[400px] shrink-0 flex flex-col px-8 py-8 gap-5 overflow-hidden">
+      <div className="settings-panel w-[400px] shrink-0 flex flex-col px-8 py-8 gap-5 overflow-hidden">
         <span className="font-mono text-[11px] tracking-[0.2em] text-[#666]">ALGORITHM SETTINGS</span>
 
         {/* Algorithm list with inline expansion for selected */}
@@ -249,7 +249,7 @@ function InputScreen({ onCompress, value, onChange, algo, onAlgoChange }: {
 
         <div className="flex flex-col gap-2 shrink-0">
           <span className="font-mono text-[10px] tracking-[0.15em] text-[#999]">QUICK PREVIEW</span>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="quick-preview-grid grid grid-cols-3 gap-2">
             {[['INPUT SIZE', `${value.length} B`], ['UNIQUE CHARS', String(uniqueChars)], ['ENTROPY', String(entropy)]].map(([l, v]) => (
               <div key={l} className="bg-[#FAFAFA] border border-[#EAEAEA] px-3 py-3 flex flex-col gap-1">
                 <span className="font-mono text-[9px] tracking-[0.1em] text-[#999]">{l}</span>
@@ -271,7 +271,7 @@ function InputScreen({ onCompress, value, onChange, algo, onAlgoChange }: {
 function CompressingScreen({ algo }: { algo: Algorithm }) {
   const steps = ['Profile symbols', 'Build model', 'Write payload']
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-10 anim-fade-in bg-[#FBFAF8] relative overflow-hidden px-8">
+    <div className="compressing-screen flex-1 flex flex-col items-center justify-center gap-10 anim-fade-in bg-[#FBFAF8] relative overflow-hidden px-8">
       <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'linear-gradient(#1A1A1A 1px, transparent 1px), linear-gradient(90deg, #1A1A1A 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
 
       <div className="relative z-10 w-full max-w-[680px] h-[220px] flex items-center justify-center">
@@ -685,14 +685,14 @@ function ResultsScreen({ result, onReset, onTestDecode }: { result: ApiResult; o
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="results-screen flex-1 flex flex-col overflow-hidden">
       {/* Results header — compact dark strip */}
-      <div className="relative overflow-hidden bg-[#1A1A1A] shrink-0 anim-fade-in" style={{ height: 80 }}>
-        <span className="font-playfair font-bold absolute select-none pointer-events-none opacity-[0.12]"
+      <div className="results-header relative overflow-hidden bg-[#1A1A1A] shrink-0 anim-fade-in" style={{ height: 80 }}>
+        <span className="results-watermark font-playfair font-bold absolute select-none pointer-events-none opacity-[0.12]"
           style={{ fontSize: 140, lineHeight: 1, color: '#fff', bottom: -16, left: -4, letterSpacing: -4 }}>
           {didCompress ? Math.max(0, reductionPct) : Math.abs(reductionPct)}%
         </span>
-        <div className="relative z-10 h-full flex items-center px-10 gap-8">
+        <div className="results-header-content relative z-10 h-full flex items-center px-10 gap-8">
           <div className="flex flex-col gap-0.5">
             <span className="font-mono text-[10px] tracking-[0.2em] text-[#555]">COMPRESSION RATIO</span>
             <span className="font-playfair text-[22px] font-bold text-white leading-tight anim-fade-up">
@@ -710,15 +710,15 @@ function ResultsScreen({ result, onReset, onTestDecode }: { result: ApiResult; o
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden min-h-0">
+      <div className="results-body flex-1 flex overflow-hidden min-h-0">
         {/* Left — compact 2-zone layout */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="results-main flex-1 flex flex-col min-h-0 overflow-hidden">
 
           {/* Zone A: top row — bars + translation side by side */}
-          <div className="flex gap-0 shrink-0 border-b border-[#EAEAEA]" style={{ height: 190 }}>
+          <div className="results-overview flex gap-0 shrink-0 border-b border-[#EAEAEA]" style={{ height: 190 }}>
 
             {/* A1: Size comparison bars */}
-            <div className="flex flex-col justify-center px-10 py-6 gap-4 border-r border-[#EAEAEA]" style={{ width: 280 }}>
+            <div className="size-panel flex flex-col justify-center px-10 py-6 gap-4 border-r border-[#EAEAEA]" style={{ width: 280 }}>
               <span className="font-mono text-[10px] tracking-[0.2em] text-[#999]">SIZE COMPARISON</span>
               <div className="flex flex-col gap-3">
                 <div className="flex flex-col gap-1.5">
@@ -741,7 +741,7 @@ function ResultsScreen({ result, onReset, onTestDecode }: { result: ApiResult; o
             </div>
 
             {/* A2: Translation preview — inline, clipped */}
-            <div className="flex-1 flex flex-col px-8 py-6 gap-2 overflow-hidden bg-[#FAFAFA]">
+            <div className="preview-panel flex-1 flex flex-col px-8 py-6 gap-2 overflow-hidden bg-[#FAFAFA]">
               <div className="flex items-center justify-between">
                 <span className="font-mono text-[10px] tracking-[0.2em] text-[#999]">TRANSLATION PREVIEW</span>
                 {result.metadata && result.metadata.length > 0 && (
@@ -765,8 +765,8 @@ function ResultsScreen({ result, onReset, onTestDecode }: { result: ApiResult; o
           </div>
 
           {/* Zone B: Encoding table (left) or algorithm-specific output */}
-          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-            <div className="flex items-center justify-between px-10 py-3 border-b border-[#EAEAEA] bg-[#FAFAFA] shrink-0">
+          <div className="results-output flex-1 flex flex-col min-h-0 overflow-hidden">
+            <div className="results-output-header flex items-center justify-between px-10 py-3 border-b border-[#EAEAEA] bg-[#FAFAFA] shrink-0">
               <div className="flex items-center gap-4">
                 <span className="font-mono text-[10px] tracking-[0.2em] text-[#999]">
                   {tableRows.length > 0 ? 'ENCODING TABLE' : 'COMPRESSED OUTPUT'}
@@ -780,7 +780,7 @@ function ResultsScreen({ result, onReset, onTestDecode }: { result: ApiResult; o
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto">
+            <div className="result-table-scroll flex-1 overflow-y-auto">
               {tableRows.length > 0 ? (
                 <table className="w-full border-collapse">
                   <thead>
@@ -820,10 +820,10 @@ function ResultsScreen({ result, onReset, onTestDecode }: { result: ApiResult; o
           </div>
         </div>
 
-        <div className="w-px bg-[#EAEAEA] shrink-0" />
+        <div className="layout-divider w-px bg-[#EAEAEA] shrink-0" />
 
         {/* Right sidebar — preserved exactly */}
-        <div className="w-[380px] shrink-0 flex flex-col px-8 py-8 gap-5 overflow-y-auto">
+        <div className="metrics-panel w-[380px] shrink-0 flex flex-col px-8 py-8 gap-5 overflow-y-auto">
           <span className="font-mono text-[11px] tracking-[0.2em] text-[#666]">DETAILED METRICS</span>
           <div className="flex flex-col gap-2">
             {([
@@ -888,7 +888,7 @@ function ResultsScreen({ result, onReset, onTestDecode }: { result: ApiResult; o
 function ErrorScreen({ error, onRetry }: { error: AppError; onRetry: () => void }) {
   const isNetwork = error.kind === 'network'
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-10 px-12 anim-fade-in">
+    <div className="error-screen flex-1 flex flex-col items-center justify-center gap-10 px-12 anim-fade-in">
       {/* Icon */}
       <div className={`w-20 h-20 flex items-center justify-center border-2 ${
         isNetwork ? 'border-[#1A1A1A]' : 'border-red-300'
@@ -992,7 +992,7 @@ export default function App() {
   const goBack = () => { setAppError(null); setScreen('input') }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-white">
+    <div className="app-shell h-screen flex flex-col overflow-hidden bg-white">
       <Nav onNavigate={setScreen} />
       <div className="w-full h-px bg-[#EAEAEA] shrink-0" />
 
