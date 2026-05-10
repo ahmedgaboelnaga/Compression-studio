@@ -9,7 +9,7 @@ const API_URL =
       ? 'http://127.0.0.1:8001'
       : '/api'
 
-type Algorithm = 'huffman' | 'rle' | 'lzw' | 'shannon-fano' | 'arithmetic' | 'arithmetic-decode'
+type Algorithm = 'huffman' | 'rle' | 'lzw' | 'shannon-fano' | 'arithmetic' | 'arithmetic-decode' | 'quantization'
 type InputTab  = 'text' | 'file'
 type Screen    = 'input' | 'compressing' | 'results' | 'error' | 'explanations'
 type ErrorKind = 'network' | 'server' | 'unknown'
@@ -48,6 +48,9 @@ interface AlgorithmDetails {
   output_strings?: string[]
   dictionary_additions?: { code: number; sequence: string }[]
   validated_round_trip?: boolean
+  quantized_values?: number[]
+  reconstructed_message?: string
+  lossy?: boolean
 }
 
 const ALGORITHMS = {
@@ -57,6 +60,7 @@ const ALGORITHMS = {
   'shannon-fano':      { name: 'Shannon-Fano',        type: 'Entropy',     complexity: 'O(n log n)', description: 'Recursive top-down symbol splitting. Predecessor to Huffman, slightly less optimal but historically significant.' },
   arithmetic:          { name: 'Arithmetic Coding',   type: 'Entropy',     complexity: 'O(n)',       description: 'Encodes the entire message as a single fractional number in (0,1). Achieves near-theoretical compression limits.' },
   'arithmetic-decode': { name: 'Arithmetic Decoding', type: 'Entropy',     complexity: 'O(n·m)',    description: 'Step-by-step arithmetic decode: given an encoded value and the symbol probability table, recovers the original message symbol-by-symbol.' },
+  quantization:        { name: 'Quantization',        type: 'Lossy',       complexity: 'O(n)',       description: 'Converts characters to ASCII values and scales them down (divides by a factor). Reconstructing the text will lose precision.' },
 } satisfies Record<Algorithm, { name: string; type: string; complexity: string; description: string }>
 
 const ALGO_KEYS = Object.keys(ALGORITHMS) as Algorithm[]
@@ -235,7 +239,9 @@ function InputScreen({ onCompress, value, onChange, algo, onAlgoChange }: {
               {algo === k && (
                 <div className="border border-t-0 border-[#E8E8E8] bg-[#FAFAFA] px-4 py-3 flex flex-col gap-2 anim-fade-up">
                   <p className="text-[12px] text-[#555] leading-[1.6]">{ALGORITHMS[k].description}</p>
-                  <span className="font-mono text-[9px] text-[#22C55E] tracking-wider">LOSSLESS</span>
+                  <span className={`font-mono text-[9px] tracking-wider ${ALGORITHMS[k].type === 'Lossy' ? 'text-[#EF4444]' : 'text-[#22C55E]'}`}>
+                    {ALGORITHMS[k].type === 'Lossy' ? 'LOSSY' : 'LOSSLESS'}
+                  </span>
                 </div>
               )}
             </div>
@@ -673,6 +679,44 @@ function ResultsScreen({ result, onReset, onTestDecode }: { result: ApiResult; o
                 : String(result.details?.encoded_value ?? '')}
             </div>
           </div>
+        </div>
+      )
+    }
+
+    if (result.algorithm === 'quantization') {
+      const quantizedVals = result.details?.quantized_values ?? []
+      return (
+        <div className="flex flex-col">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-[#FAFAFA] border-b border-[#EAEAEA]">
+                {['#', 'SYMBOL', 'ASCII', 'QUANTIZED', 'RECONSTRUCTED'].map(h => (
+                  <th key={h} className="font-mono text-[10px] tracking-[0.12em] text-[#999] text-left px-6 py-3 font-normal">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {quantizedVals.slice(0, 40).map((val, i) => {
+                const char = result.original[i]
+                const ascii = char.charCodeAt(0)
+                const reconstructed = String.fromCharCode(val * 5)
+                return (
+                  <tr key={i} className={`border-b border-[#F4F4F4] ${i % 2 === 1 ? 'bg-[#FAFAFA]' : 'bg-white'}`}>
+                    <td className="font-mono text-[10px] text-[#CCC] px-6 py-3">{i + 1}</td>
+                    <td className="font-mono text-[12px] text-[#1A1A1A] px-6 py-3">"{formatSymbol(char)}"</td>
+                    <td className="font-mono text-[12px] text-[#666] px-6 py-3">{ascii}</td>
+                    <td className="font-mono text-[12px] text-[#2F8F55] px-6 py-3 font-semibold">{val}</td>
+                    <td className="font-mono text-[12px] text-[#B45309] px-6 py-3">"{formatSymbol(reconstructed)}"</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+          {quantizedVals.length > 40 && (
+            <div className="px-6 py-4 border-t border-[#EAEAEA] bg-[#FAFAFA]">
+              <span className="font-mono text-[11px] text-[#999]">{quantizedVals.length - 40} more characters in the original data</span>
+            </div>
+          )}
         </div>
       )
     }

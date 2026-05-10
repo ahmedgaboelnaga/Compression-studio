@@ -472,3 +472,46 @@ def compress_lzw(data: str) -> dict:
             {"label": "New", "value": f"{len(additions)} additions"},
         ],
     }
+
+# 6. Quantization (Lossy)
+def compress_quantization(data: str) -> dict:
+    if not data:
+        return {"compressed": "", "ratio": 0, "compressed_size_bits": 0}
+
+    # Quantize: convert each char to ascii, divide by 5
+    quantized_values = [ord(char) // 5 for char in data]
+    # Reconstruct: multiply by 5 and convert back to char
+    reconstructed = "".join(chr(val * 5) for val in quantized_values)
+
+    compressed = " ".join(map(str, quantized_values))
+    original_bits = _original_bits(data)
+    # Compressed size: roughly 6 bits per value (since max ASCII is ~127, 127/5 = 25 -> fits in 5 bits, but let's say 6 to be safe for up to 255/5=51)
+    compressed_bits = len(quantized_values) * 6
+
+    details = {
+        "quantized_values": quantized_values,
+        "reconstructed_message": reconstructed,
+        "lossy": True
+    }
+
+    # Translation preview
+    preview_parts = [
+        f"'{data[i]}' \u2192 {quantized_values[i]}"
+        for i in range(min(len(data), 8))
+    ]
+    preview = "   ".join(preview_parts)
+    if len(data) > 8:
+        preview += "   ..."
+
+    return {
+        "compressed": compressed,
+        "ratio": _ratio(compressed_bits, original_bits),
+        "compressed_size_bits": compressed_bits,
+        "details": details,
+        "translation_preview": preview,
+        "metadata": [
+            {"label": "Method", "value": "ASCII // 5"},
+            {"label": "Lossy", "value": "Yes"},
+            {"label": "Bits/Char", "value": "6"}
+        ]
+    }

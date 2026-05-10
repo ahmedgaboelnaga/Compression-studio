@@ -21,6 +21,7 @@ class AlgorithmName(str, Enum):
     arithmetic = "arithmetic"
     arithmetic_decode = "arithmetic-decode"
     lzw = "lzw"
+    quantization = "quantization"
 
 class CompressRequest(BaseModel):
     text: str
@@ -47,6 +48,8 @@ def _run_algorithm(algo: AlgorithmName, text: str) -> dict:
             result = algorithms.compress_arithmetic_decode(text)
         elif algo == AlgorithmName.lzw:
             result = algorithms.compress_lzw(text)
+        elif algo == AlgorithmName.quantization:
+            result = algorithms.compress_quantization(text)
         else:
             raise HTTPException(status_code=400, detail="Unknown algorithm")
     except ValueError as exc:
